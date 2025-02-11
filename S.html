@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Calculator</title>
+    <style>
+        :root {
+            --bg-color: white;
+            --text-color: black;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 50px;
+        }
+        .container {
+            width: 400px;
+            min-width: 250px;
+            min-height: 250px;
+            max-width: 600px;
+            max-height: 500px;
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: 2px solid #ccc;
+            margin: auto;
+        }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .btn-calculate { background-color: #28a745; color: white; }
+        .btn-reset { background-color: #dc3545; color: white; }
+        .btn-dark-mode { background-color: #333; color: white; }
+        .btn-voice { background-color: #007bff; color: white; }
+
+        p { font-size: 20px; font-weight: bold; margin-top: 20px; }
+        .error { color: red; font-size: 14px; margin-top: 5px; }
+
+        /* Dark Mode */
+        .dark-mode { --bg-color: #333; --text-color: white; }
+
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+        .context-menu ul {
+            list-style: none;
+            padding: 10px;
+            margin: 0;
+        }
+        .context-menu ul li {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .context-menu ul li:hover { background-color: #ddd; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="calculator">
+        <h2>Sum Calculator</h2>
+        
+        <input type="number" id="num1" placeholder="Enter first number" autofocus>
+        <input type="number" id="num2" placeholder="Enter second number">
+        
+        <button class="btn-calculate" onclick="calculateSum()">Calculate</button>
+        <button class="btn-reset" onclick="resetCalculator()">Reset</button>
+        <button class="btn-dark-mode" onclick="toggleDarkMode()">Dark Mode</button>
+        <button class="btn-voice" onclick="startVoiceRecognition()">🎤 Start Listening</button>
+
+        <p>Result: <output id="sumOutput">0</output></p>
+        <p class="error" id="errorMsg"></p>
+        <p class="voice-status" id="voiceStatus">Voice command: Not started</p>
+    </div>
+
+    <!-- Custom Right Click Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <ul>
+            <li onclick="calculateSum()">Calculate</li>
+            <li onclick="resetCalculator()">Reset</li>
+            <li onclick="toggleDarkMode()">Toggle Dark Mode</li>
+        </ul>
+    </div>
+
+    <script>
+        function calculateSum() {
+            let num1 = document.getElementById("num1").value;
+            let num2 = document.getElementById("num2").value;
+            let errorMsg = document.getElementById("errorMsg");
+
+            errorMsg.textContent = "";
+
+            if (num1 === "" || num2 === "") {
+                errorMsg.textContent = "Please enter both numbers!";
+                return;
+            }
+
+            let sum = Number(num1) + Number(num2);
+            document.getElementById("sumOutput").textContent = sum;
+        }
+
+        function resetCalculator() {
+            document.getElementById("num1").value = "";
+            document.getElementById("num2").value = "";
+            document.getElementById("sumOutput").textContent = "0";
+            document.getElementById("errorMsg").textContent = "";
+            document.getElementById("voiceStatus").textContent = "Voice command: Not started";
+            document.getElementById("num1").focus();
+        }
+        //function tomulti[ly
+        
+    
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+
+        // Auto-focus on second input when first input is filled
+        document.getElementById("num1").addEventListener("input", function() {
+            if (this.value.length > 1) {
+                document.getElementById("num2").focus();
+            }
+        });
+
+        // Context Menu
+        let contextMenu = document.getElementById("contextMenu");
+
+        document.addEventListener("contextmenu", function (event) {
+            event.preventDefault();
+            contextMenu.style.display = "block";
+            contextMenu.style.left = `${event.pageX}px`;
+            contextMenu.style.top = `${event.pageY}px`;
+        });
+
+        document.addEventListener("click", function () {
+            contextMenu.style.display = "none";
+        });
+
+        // Voice Recognition (Manual Start)
+        function startVoiceRecognition() {
+            if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
+                alert("Your browser does not support speech recognition.");
+                return;
+            }
+
+            let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.continuous = false;
+            recognition.lang = "en-US";
+
+            recognition.onstart = () => {
+                document.getElementById("voiceStatus").textContent = "Listening...";
+            };
+
+            recognition.onresult = (event) => {
+                let speech = event.results[0][0].transcript.toLowerCase();
+                document.getElementById("voiceStatus").textContent = `You said: "${speech}"`;
+
+                if (speech.includes("calculate")) {
+                    calculateSum();
+                } else if (speech.includes("reset")) {
+                    resetCalculator();
+                } else if (speech.includes("toggle dark mode")) {
+                    toggleDarkMode();
+                } else {
+                    document.getElementById("voiceStatus").textContent = "Command not recognized.";
+                }
+            };
+
+            recognition.onerror = (event) => {
+                document.getElementById("voiceStatus").textContent = "Voice recognition error.";
+            };
+
+            recognition.start();
+        }
+    </script>
+
+</body>
+</html>
